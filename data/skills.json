@@ -1,0 +1,26 @@
+[
+  {
+    "category": "Languages",
+    "items": ["Python", "C", "C++", "JavaScript", "SQL", "Bash"]
+  },
+  {
+    "category": "Embedded and Systems",
+    "items": ["Linux Internals", "POSIX", "Memory Management", "File Systems", "ELF", "Syscalls"]
+  },
+  {
+    "category": "Frameworks",
+    "items": ["Django", "Selenium", "TensorFlow", "Scikit-learn"]
+  },
+  {
+    "category": "Tools and Libraries",
+    "items": ["Git", "GitHub", "GDB", "Arduino", "NumPy", "Pandas", "Beautiful Soup", "SFML", "Pygame", "OpenCV"]
+  },
+  {
+    "category": "Databases",
+    "items": ["Redis", "PostgreSQL", "MySQL", "Oracle", "SQLite"]
+  },
+  {
+    "category": "Soft Skills",
+    "items": ["Problem-solving", "Observation", "Attention to Detail"]
+  }
+]

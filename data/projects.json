@@ -1,0 +1,117 @@
+{
+  "Systems and Low Level": [
+    {
+      "title": "Guts - Local Version Control System",
+      "techStack": ["C", "zlib", "OpenSSL (SHA-1)"],
+      "description": "A Git-inspired local version control system with object storage, commit DAGs, branching, and merge support.",
+      "details": "Implements core VCS internals in C with compressed object handling and cryptographic hashing.",
+      "githubUrl": "https://github.com/Abeehimr/guts"
+    },
+    {
+      "title": "SQLite File Parser",
+      "techStack": ["Python"],
+      "description": "Parsed SQLite database files at the binary level by implementing B-tree traversal and record decoding without SQLite APIs."
+    }
+  ],
+  "Embedded and Robotics": [
+    {
+      "title": "Autonomous Vision-Guided Turret",
+      "techStack": ["Python", "OpenCV", "Arduino"],
+      "description": "Real-time vision-guided turret integrating OpenCV and Arduino for autonomous target tracking and firing.",
+      "details": "Combines computer vision, angle mapping, serial communication, and servo actuation for closed-loop pan-tilt control.",
+      "githubUrl": "https://github.com/Abeehimr/Turret"
+    }
+  ],
+  "Data and Machine Learning": [
+    {
+      "title": "Warehouse Stock Optimization System",
+      "techStack": ["Python", "Prophet", "Pickle"],
+      "description": "Forecasted warehouse demand using Prophet and optimized stock redistribution to minimize inter-warehouse borrowing."
+    }
+  ],
+  "Automation and Scraping": [
+    {
+      "title": "Amazon Automation with Selenium",
+      "techStack": ["Python", "JavaScript", "Selenium"],
+      "description": "Developed automation workflows for product filtering and repetitive Amazon browsing tasks."
+    },
+    {
+      "title": "Web Scraper",
+      "techStack": ["Python", "Requests", "Beautiful Soup"],
+      "description": "Automated extraction and storage of university admission test data."
+    },
+    {
+      "title": "ASCII Art Converter",
+      "techStack": ["Python", "PIL", "OpenCV"],
+      "description": "Converts images and live video streams into ASCII art.",
+      "details": "Supports media-to-ASCII workflows for static images and frame-based video processing.",
+      "githubUrl": "https://github.com/Abeehimr/ASCII_ART"
+    }
+  ],
+  "Games": [
+    {
+      "title": "Strange World Catto Lives In",
+      "techStack": ["Python", "Pygame"],
+      "description": "A feature-rich 2D platformer with unlockables, high-score tracking, and responsive controls.",
+      "details": "Includes pixel-perfect collision, dynamic obstacles, and progression-based gameplay.",
+      "githubUrl": "https://github.com/Abeehimr/Strange-World-Catto-Lives-In"
+    },
+    {
+      "title": "Tetris Game",
+      "techStack": ["Python", "Pygame"],
+      "description": "Classic Tetris implementation with tetromino control, line clearing, and score tracking.",
+      "githubUrl": "https://github.com/Abeehimr/TETRIS"
+    },
+    {
+      "title": "2D Fractal Engine",
+      "techStack": ["Python", "Pygame"],
+      "description": "Real-time renderer for tree and triangle fractal visualizations.",
+      "githubUrl": "https://github.com/Abeehimr/2D_fractal_engine"
+    },
+    {
+      "title": "Interactive Tic-Tac-Toe with Profiles",
+      "techStack": ["Python"],
+      "description": "CLI game with user authentication, profile stats, and persistent scoreboard.",
+      "githubUrl": "https://github.com/Abeehimr/tic_tac_toe"
+    }
+  ],
+  "Web Applications": [
+    {
+      "title": "Commerce (CS50W Project)",
+      "techStack": ["Django", "JavaScript"],
+      "description": "E-commerce web application with authentication, listings, cart management, and order flow.",
+      "githubUrl": "https://github.com/Abeehimr/CS50W_Projects"
+    },
+    {
+      "title": "Mail (CS50W Project)",
+      "techStack": ["Django", "JavaScript"],
+      "description": "Web-based email client supporting inbox workflows and authenticated user sessions.",
+      "githubUrl": "https://github.com/Abeehimr/CS50W_Projects"
+    },
+    {
+      "title": "Wiki (CS50W Project)",
+      "techStack": ["Django", "Markdown"],
+      "description": "Wiki-style platform for creating, editing, and searching markdown-based entries.",
+      "githubUrl": "https://github.com/Abeehimr/CS50W_Projects"
+    },
+    {
+      "title": "CosmoCon",
+      "techStack": ["HTML", "CSS", "JavaScript"],
+      "description": "Frontend event website project with static pages and structured UI sections.",
+      "githubUrl": "https://github.com/Abeehimr/CosmoCon",
+      "demoUrl": "https://abeehimr.github.io/CosmoCon/"
+    },
+    {
+      "title": "Zoo-Book",
+      "techStack": ["HTML", "CSS", "JavaScript"],
+      "description": "Static web experience project with multi-page content and presentation-focused layout.",
+      "githubUrl": "https://github.com/Abeehimr/Zoo-Book",
+      "demoUrl": "https://abeehimr.github.io/Zoo-Book/"
+    },
+    {
+      "title": "Football Club Website (Frontend)",
+      "techStack": ["Figma", "HTML", "CSS"],
+      "description": "Designed and developed a visually engaging football club website with focus on UI/UX."
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "modules": {
+    "site": "data/site.json",
+    "profile": "data/profile.json",
+    "experience": "data/experience.json",
+    "education": "data/education.json",
+    "skills": "data/skills.json",
+    "projects": "data/projects.json",
+    "cpData": "data/cp.json"
+  }
+}

@@ -1,0 +1,180 @@
+:root {
+  --bg: #f4f0e7;
+  --surface: #fffdf8;
+  --text: #1f1f1f;
+  --muted: #555;
+  --border: #1f1f1f;
+  --link: #0b4a89;
+  --link-hover: #0a2f52;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #111316;
+    --surface: #171a1f;
+    --text: #ececec;
+    --muted: #b6b6b6;
+    --border: #cfcfcf;
+    --link: #8dc5ff;
+    --link-hover: #b4d8ff;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 1.2rem;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Times New Roman", Times, serif;
+  line-height: 1.45;
+}
+
+header,
+main {
+  max-width: 980px;
+  margin: 0 auto;
+}
+
+#nav {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 0.5rem 1rem;
+  margin-bottom: 1rem;
+}
+
+#nav nav {
+  text-align: center;
+}
+
+.nav-line {
+  margin: 0.2rem 0;
+}
+
+h1 {
+  text-align: center;
+  margin: 0.2rem 0 1rem;
+  letter-spacing: 0.2px;
+}
+
+h2 {
+  margin-top: 1.2rem;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.2rem;
+}
+
+main > h2,
+.project-category > h2,
+.card h3 {
+  text-wrap: balance;
+}
+
+p,
+li,
+td,
+th {
+  font-size: 1rem;
+}
+
+a {
+  color: var(--link);
+}
+
+a:hover {
+  color: var(--link-hover);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--surface);
+  margin: 0.6rem 0 1.2rem;
+}
+
+th,
+td {
+  border: 1px solid var(--border);
+  padding: 0.45rem 0.55rem;
+  vertical-align: top;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 0.8rem 1rem;
+  margin: 0.8rem 0;
+}
+
+.card h3 {
+  margin: 0 0 0.4rem;
+}
+
+.card p {
+  margin: 0.15rem 0 0.55rem;
+  color: var(--muted);
+}
+
+.card ul {
+  margin: 0;
+  padding-left: 1.2rem;
+}
+
+.project-category {
+  border: 1px dashed var(--border);
+  padding: 0.5rem 0.8rem 0.8rem;
+  margin: 1rem 0 1.3rem;
+  background: var(--surface);
+}
+
+.project-category > h2 {
+  margin-top: 0.3rem;
+}
+
+.project-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  margin: 0.7rem 0;
+}
+
+.project-card summary {
+  cursor: pointer;
+  padding: 0.6rem 0.75rem;
+}
+
+.project-card[open] summary {
+  border-bottom: 1px solid var(--border);
+}
+
+.project-body {
+  padding: 0.55rem 0.8rem 0.7rem;
+}
+
+.project-body ul {
+  margin: 0;
+  padding-left: 1.2rem;
+}
+
+.project-links {
+  margin: 0.55rem 0 0;
+}
+
+hr {
+  border: 0;
+  border-top: 1px solid var(--border);
+  margin: 0.8rem 0;
+}
+
+@media (max-width: 700px) {
+  body {
+    padding: 0.7rem;
+  }
+
+  #nav,
+  .card,
+  .project-category {
+    padding: 0.7rem;
+  }
+}

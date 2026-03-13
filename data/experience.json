@@ -1,0 +1,24 @@
+[
+  {
+    "title": "Technical Head",
+    "organization": "FCIT Robotics Society, PUCIT",
+    "location": "Lahore, Pakistan",
+    "start": "Jan 2026",
+    "end": "Present",
+    "bullets": [
+      "Architected and guided robotics projects involving microcontrollers, motor control, and sensor-driven systems.",
+      "Conducted technical reviews and mentored members on low-level programming and hardware-software integration."
+    ]
+  },
+  {
+    "title": "Human Data Engineer",
+    "organization": "Micro1 (Independent Contractor)",
+    "location": "Remote",
+    "start": "Apr 2025",
+    "end": "Jul 2025",
+    "bullets": [
+      "Generated and evaluated expert-level technical datasets with focus on algorithmic correctness and logical consistency.",
+      "Performed quality assurance reviews and mentored junior engineers to maintain data accuracy and reliability."
+    ]
+  }
+]

@@ -1,0 +1,10 @@
+{
+  "title": "Portfolio",
+  "navigation": [
+    { "label": "Home", "href": "index.html", "page": "home" },
+    { "label": "Experience", "href": "experience.html", "page": "experience" },
+    { "label": "Education", "href": "education.html", "page": "education" },
+    { "label": "Projects", "href": "projects.html", "page": "projects" },
+    { "label": "Competitive Programming", "href": "cp.html", "page": "cp" }
+  ]
+}

@@ -1,0 +1,183 @@
+{
+  "profiles": [
+    {
+      "label": "Codeforces",
+      "url": "https://codeforces.com/profile/ibraheemkureshi"
+    },
+    {
+      "label": "LeetCode",
+      "url": "https://leetcode.com/abeehimr"
+    },
+    {
+      "label": "AtCoder",
+      "url": "https://atcoder.jp/users/GatoHasBeenTaken"
+    }
+  ],
+  "honors": [
+    "Country Rank 1 - LeetCode (Top rated in Pakistan)",
+    "Guardian level on LeetCode (first in Pakistan)",
+    "Codeforces rating of 1900+ Candidate Master"
+  ],
+  "events": [
+    {
+      "event": "ICPC AWC 2026",
+      "venue": "FAST Peshawar",
+      "position": "81"
+    },
+    {
+      "event": "UTS 6.0",
+      "venue": "UET Lahore",
+      "position": "1"
+    },
+    {
+      "event": "UCP Taakra",
+      "venue": "UCP",
+      "position": "1"
+    },
+    {
+      "event": "ICPC Topi Regional 2025-2026",
+      "venue": "PUCIT",
+      "position": "7th (silver)"
+    },
+    {
+      "event": "Computing Fest",
+      "venue": "UHE",
+      "position": "1"
+    },
+    {
+      "event": "Think2Code",
+      "venue": "UCP",
+      "position": "1"
+    },
+    {
+      "event": "Robocom 25",
+      "venue": "UET Lahore",
+      "position": "1"
+    },
+    {
+      "event": "Brainiac",
+      "venue": "UET Lahore",
+      "position": "1"
+    },
+    {
+      "event": "Viscospark Debug Code",
+      "venue": "COMSATS Wah",
+      "position": "1"
+    },
+    {
+      "event": "Viscospark On Spot Programming",
+      "venue": "COMSATS Wah",
+      "position": "1"
+    },
+    {
+      "event": "ACM Chapter Coding Spree",
+      "venue": "COMSATS Lahore",
+      "position": "1"
+    },
+    {
+      "event": "Surge 25",
+      "venue": "UMT",
+      "position": "2"
+    },
+    {
+      "event": "Tech Karwan",
+      "venue": "UOE",
+      "position": "2"
+    },
+    {
+      "event": "CodePK",
+      "venue": "GIKI",
+      "position": "10th (bronze)"
+    },
+    {
+      "event": "PUCON 25",
+      "venue": "PUCIT New Campus",
+      "position": "2"
+    },
+    {
+      "event": "CodeRush 25",
+      "venue": "ITU Lahore",
+      "position": "3"
+    },
+    {
+      "event": "Logic Blitz 25",
+      "venue": "UET Lahore",
+      "position": "1"
+    },
+    {
+      "event": "SOFTEC 25",
+      "venue": "FAST Lahore",
+      "position": "3"
+    },
+    {
+      "event": "XR Hackathon",
+      "venue": "FCCU",
+      "position": "2"
+    },
+    {
+      "event": "ITEC 25 Coding Competition",
+      "venue": "UET Lahore",
+      "position": "1"
+    },
+    {
+      "event": "ITEC 25 Quiz Competition",
+      "venue": "UET Lahore",
+      "position": "1"
+    },
+    {
+      "event": "UTS 5.0",
+      "venue": "UET Lahore",
+      "position": "2"
+    },
+    {
+      "event": "CodeX",
+      "venue": "UET Lahore",
+      "position": "3"
+    },
+    {
+      "event": "ICPC Topi Regional 2024-2025",
+      "venue": "FAST Lahore",
+      "position": "10th (bronze)"
+    },
+    {
+      "event": "Lumspifi",
+      "venue": "LUMS",
+      "position": "1"
+    },
+    {
+      "event": "Viscospark On Spot Programming",
+      "venue": "COMSATS Wah",
+      "position": "1"
+    },
+    {
+      "event": "Unknown Event (FCCU)",
+      "venue": "FCCU",
+      "position": "6"
+    },
+    {
+      "event": "Code Fest 6.0",
+      "venue": "PUCIT",
+      "position": "4"
+    },
+    {
+      "event": "Electrocon 24: Logic Blitz",
+      "venue": "UET Lahore",
+      "position": "5"
+    },
+    {
+      "event": "ITEC 24",
+      "venue": "UET Lahore",
+      "position": "6"
+    },
+    {
+      "event": "PUCON 24",
+      "venue": "PUCIT",
+      "position": "16"
+    },
+    {
+      "event": "UTS 4.0",
+      "venue": "UET Lahore",
+      "position": "N/A"
+    }
+  ]
+}
