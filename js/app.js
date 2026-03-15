@@ -3,9 +3,7 @@ const SOURCE_PATH = "data/source.json";
 const state = {
   page: document.body.dataset.page || "home",
   modules: null,
-  selectedNav: 0,
-  focusPane: 0,
-  panes: []
+  selectedNav: 0
 };
 
 const pageTitles = {
@@ -113,7 +111,7 @@ function resolveBorderTheme() {
   document.documentElement.setAttribute("data-border-preset", activeKey);
 }
 
-function renderTopBar(siteTitle) {
+function renderTopBar() {
   const rows = window.innerHeight;
   const cols = window.innerWidth;
 
@@ -386,7 +384,7 @@ function renderLayout() {
 
   content.innerHTML = `
     <div class="tui">
-      ${renderTopBar((state.modules.site || {}).title || "portfolio")}
+      ${renderTopBar()}
       <main class="tui-main">
         ${renderNavPane(navItems)}
         <section class="pane pane-content">
@@ -399,24 +397,7 @@ function renderLayout() {
   `;
 
   wireNavEvents();
-  setupPanes();
-  setPaneFocus(0);
   updateClock();
-}
-
-function setupPanes() {
-  const paneNodes = document.querySelectorAll(".pane");
-  state.panes = Array.from(paneNodes);
-  state.panes.forEach((pane, index) => {
-    pane.addEventListener("click", () => setPaneFocus(index));
-  });
-}
-
-function setPaneFocus(index) {
-  state.focusPane = index;
-  state.panes.forEach((pane, idx) => {
-    pane.classList.toggle("focused", idx === index);
-  });
 }
 
 function wireNavEvents() {
@@ -428,18 +409,6 @@ function wireNavEvents() {
         window.location.href = href;
       }
     });
-  });
-}
-
-function paintNavSelection() {
-  const buttons = document.querySelectorAll(".nav-item");
-  buttons.forEach((button, idx) => {
-    const marker = button.querySelector(".nav-marker");
-    const isActive = idx === state.selectedNav;
-    button.classList.toggle("active", isActive);
-    if (marker) {
-      marker.textContent = isActive ? ">" : " ";
-    }
   });
 }
 
