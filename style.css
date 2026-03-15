@@ -362,6 +362,13 @@ a:hover {
     text-align: left;
   }
 
+  .status-left,
+  .status-mid,
+  .status-right {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
   .tui-main {
     grid-template-columns: 1fr;
     gap: 6px;
@@ -371,6 +378,54 @@ a:hover {
   .pane-content,
   .pane-side {
     min-height: 220px;
+  }
+
+  .pane-header,
+  .pane-footer {
+    font-size: 0.82rem;
+    padding-left: 4px;
+    padding-right: 4px;
+  }
+
+  .pane-body {
+    margin: 0 4px;
+    padding: 6px 8px;
+  }
+
+  .nav-item,
+  .right-list li {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .block,
+  .project-card,
+  .timeline-item,
+  .edu-item,
+  .cp-item,
+  .skill-group {
+    border-left-width: 0;
+    border-right-width: 0;
+    border-top: 1px solid var(--line-strong);
+    border-bottom: 1px solid var(--line-strong);
+    padding: 6px 4px;
+    margin-bottom: 8px;
+  }
+
+  .block::before,
+  .block::after,
+  .project-card::before,
+  .project-card::after,
+  .timeline-item::before,
+  .timeline-item::after,
+  .edu-item::before,
+  .edu-item::after,
+  .cp-item::before,
+  .cp-item::after,
+  .skill-group::before,
+  .skill-group::after {
+    content: none;
+    margin: 0;
   }
 
   .kv {

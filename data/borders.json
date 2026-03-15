@@ -7,6 +7,17 @@
     "block": 104,
     "card": 104
   },
+  "mobile": {
+    "breakpoint": 760,
+    "active": "ascii",
+    "lineWidths": {
+      "paneNav": 28,
+      "paneMain": 42,
+      "paneSide": 34,
+      "block": 64,
+      "card": 64
+    }
+  },
   "presets": {
     "classic-single": {
       "pane": { "tl": "┌", "tr": "┐", "bl": "└", "br": "┘", "h": "─", "v": "│" },

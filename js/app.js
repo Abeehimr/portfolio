@@ -203,7 +203,10 @@ function applyBorderTheme() {
 function resolveBorderTheme() {
   const borders = state.modules.borders || {};
   const presets = borders.presets || {};
-  const activeKey = borders.active || "mixed";
+  const mobile = borders.mobile || {};
+  const breakpoint = Number(mobile.breakpoint) || 760;
+  const isMobile = window.innerWidth <= breakpoint;
+  const activeKey = isMobile ? (mobile.active || borders.active || "mixed") : (borders.active || "mixed");
   const chosen = presets[activeKey] || presets.mixed;
 
   if (chosen) {
@@ -215,9 +218,11 @@ function resolveBorderTheme() {
   }
 
   const widths = borders.lineWidths || {};
+  const mobileWidths = isMobile ? (mobile.lineWidths || {}) : {};
   state.lineWidths = {
     ...state.lineWidths,
-    ...widths
+    ...widths,
+    ...mobileWidths
   };
 
   applyBorderTheme();
@@ -664,6 +669,7 @@ async function boot() {
     renderLayout();
     window.addEventListener("keydown", onKeyDown);
     window.addEventListener("resize", () => {
+      resolveBorderTheme();
       fitPaneBordersToLayout();
       const status = document.querySelector(".status-right");
       if (status) {
