@@ -104,14 +104,23 @@ function findSelectedNavIndex(navItems) {
   return idx >= 0 ? idx : 0;
 }
 
+function asciiPaneHeader(label, width = 44) {
+  const title = `[ ${label} ]`;
+  const fillLen = Math.max(2, width - title.length - 2);
+  return `┌${title}${"─".repeat(fillLen)}┐`;
+}
+
+function asciiPaneFooter(width = 44) {
+  return `└${"─".repeat(Math.max(2, width))}┘`;
+}
+
 function renderTopBar(siteTitle) {
-  const profile = state.modules.profile || {};
   const rows = window.innerHeight;
   const cols = window.innerWidth;
 
   return `
     <section class="statusbar" role="status" aria-live="polite">
-      <div class="status-left">${esc(safe(profile.name, "user"))}@${esc(safe(siteTitle, "portfolio"))}</div>
+      <div class="status-left">[ dev@portfolio ]</div>
       <div class="status-mid">section:${esc(getCurrentPageTitle().toLowerCase())}</div>
       <div class="status-right">${esc(dateString())} ${esc(timeString())} | ${cols}x${rows}</div>
     </section>
@@ -135,10 +144,11 @@ function renderNavPane(navItems) {
 
   return `
     <section class="pane pane-nav">
-      <header class="pane-header">[ Navigation ]</header>
+      <header class="pane-header">${asciiPaneHeader("Navigation", 36)}</header>
       <div class="pane-body">
         <ul class="nav-list">${navButtons}</ul>
       </div>
+      <footer class="pane-footer">${asciiPaneFooter(36)}</footer>
     </section>
   `;
 }
@@ -174,16 +184,9 @@ function renderHomeContent() {
     )
     .join("");
 
-  const ascii = [
-    "┌ Portfolio Dashboard ──────────────────────────┐",
-    "│ text-first • keyboard-ready • terminal-ui      │",
-    "└────────────────────────────────────────────────┘"
-  ].join("\n");
-
   return `
     <h1 class="section-title">About</h1>
     <p class="tagline">${esc(profile.summary)}</p>
-    <pre class="ascii-card">${esc(ascii)}</pre>
     ${renderProfileBlock()}
     <section class="block">
       <h2 class="section-title">Top Skills</h2>
@@ -357,7 +360,7 @@ function renderSidePane() {
 
   return `
     <section class="pane pane-side">
-      <header class="pane-header">[ Context <span class="muted">mouse + keyboard</span> ]</header>
+      <header class="pane-header">${asciiPaneHeader("Input: mouse / keyboard", 40)}</header>
       <div class="pane-body">
         <section class="block">
           <h2 class="section-title">Session</h2>
@@ -376,13 +379,13 @@ function renderSidePane() {
         <section class="block">
           <h2 class="section-title">Command Hints</h2>
           <ul class="right-list">
-            <li><span class="badge">tab</span> switch pane focus</li>
-            <li><span class="badge">j/k</span> move in nav or scroll panel</li>
+            <li><span class="badge">j/k</span> move in navigation</li>
             <li><span class="badge">enter</span> open selected section</li>
             <li><span class="badge">click</span> activate nav item</li>
           </ul>
         </section>
       </div>
+      <footer class="pane-footer">${asciiPaneFooter(40)}</footer>
     </section>
   `;
 }
@@ -398,14 +401,14 @@ function renderLayout() {
       <main class="tui-main">
         ${renderNavPane(navItems)}
         <section class="pane pane-content">
-          <header class="pane-header">[ ${esc(getCurrentPageTitle())} ]</header>
+          <header class="pane-header">${asciiPaneHeader(esc(getCurrentPageTitle()), 58)}</header>
           <div class="pane-body" id="main-pane-body">${getPageContent()}</div>
+          <footer class="pane-footer">${asciiPaneFooter(58)}</footer>
         </section>
         ${renderSidePane()}
       </main>
       <footer class="keybar">
         <div class="hints">
-          <span><strong>[tab]</strong> pane</span>
           <span><strong>[j/k]</strong> move</span>
           <span><strong>[↑/↓]</strong> move</span>
           <span><strong>[enter]</strong> open</span>
@@ -526,37 +529,21 @@ function updateClock() {
 function onKeyDown(event) {
   const key = event.key.toLowerCase();
 
-  if (key === "tab") {
-    event.preventDefault();
-    cyclePaneFocus();
-    return;
-  }
-
   if (key === "enter") {
-    if (state.focusPane === 0) {
-      event.preventDefault();
-      openSelectedNav();
-    }
+    event.preventDefault();
+    openSelectedNav();
     return;
   }
 
   if (key === "arrowup" || key === "k") {
     event.preventDefault();
-    if (state.focusPane === 0) {
-      moveNav(-1);
-    } else {
-      scrollActivePane(-1);
-    }
+    moveNav(-1);
     return;
   }
 
   if (key === "arrowdown" || key === "j") {
     event.preventDefault();
-    if (state.focusPane === 0) {
-      moveNav(1);
-    } else {
-      scrollActivePane(1);
-    }
+    moveNav(1);
   }
 }
 
