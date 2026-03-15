@@ -5,19 +5,7 @@ const state = {
   modules: null,
   selectedNav: 0,
   focusPane: 0,
-  panes: [],
-  borderPreset: {
-    pane: { tl: "┌", tr: "┐", bl: "└", br: "┘", h: "─", v: "│" },
-    block: { tl: "┌", tr: "┐", bl: "└", br: "┘", h: "─", v: "│" },
-    card: { tl: "├", tr: "┤", bl: "└", br: "┘", h: "─", v: "│" }
-  },
-  lineWidths: {
-    paneNav: 36,
-    paneMain: 58,
-    paneSide: 40,
-    block: 104,
-    card: 104
-  }
+  panes: []
 };
 
 const pageTitles = {
@@ -116,116 +104,13 @@ function findSelectedNavIndex(navItems) {
   return idx >= 0 ? idx : 0;
 }
 
-function asciiPaneHeader(label, width = 44) {
-  const chars = state.borderPreset.pane;
-  const title = `[ ${label} ]`;
-  const fillLen = Math.max(2, width - title.length - 2);
-  return `${chars.tl}${title}${chars.h.repeat(fillLen)}${chars.tr}`;
-}
-
-function asciiPaneFooter(width = 44) {
-  const chars = state.borderPreset.pane;
-  const total = Math.max(4, Number(width) || 4);
-  return `${chars.bl}${chars.h.repeat(total - 2)}${chars.br}`;
-}
-
-function getMonospaceCharWidth(refNode) {
-  const probe = document.createElement("span");
-  const refStyle = window.getComputedStyle(refNode || document.body);
-  probe.textContent = "0";
-  probe.style.position = "absolute";
-  probe.style.visibility = "hidden";
-  probe.style.pointerEvents = "none";
-  probe.style.fontFamily = refStyle.fontFamily;
-  probe.style.fontSize = refStyle.fontSize;
-  probe.style.fontWeight = refStyle.fontWeight;
-  probe.style.letterSpacing = refStyle.letterSpacing;
-  document.body.appendChild(probe);
-  const width = probe.getBoundingClientRect().width || 8;
-  probe.remove();
-  return width;
-}
-
-function fitPaneBorderWidth(paneSelector, headerLabel, fallbackWidth) {
-  const pane = document.querySelector(paneSelector);
-  if (!pane) {
-    return;
-  }
-
-  const header = pane.querySelector(".pane-header");
-  const footer = pane.querySelector(".pane-footer");
-  if (!header || !footer) {
-    return;
-  }
-
-  const charWidth = getMonospaceCharWidth(header);
-  const horizontalPadding = 16;
-  const totalWidth = Math.max(4, Math.floor((pane.clientWidth - horizontalPadding) / charWidth));
-  const finalWidth = Number.isFinite(totalWidth) && totalWidth > 4 ? totalWidth : fallbackWidth;
-  const footerWidth = Math.max(4, finalWidth - 2);
-
-  header.textContent = asciiPaneHeader(headerLabel, finalWidth);
-  footer.textContent = asciiPaneFooter(footerWidth);
-}
-
-function fitPaneBordersToLayout() {
-  fitPaneBorderWidth(".pane-nav", "Navigation", state.lineWidths.paneNav);
-  fitPaneBorderWidth(".pane-content", getCurrentPageTitle(), state.lineWidths.paneMain);
-  fitPaneBorderWidth(".pane-side", "Input: mouse / keyboard", state.lineWidths.paneSide);
-}
-
-function buildAsciiLine(chars, width, kind) {
-  const total = Math.max(4, Number(width) || 4);
-  const w = total - 2;
-  if (kind === "top") {
-    return `${chars.tl}${chars.h.repeat(w)}${chars.tr}`;
-  }
-  return `${chars.bl}${chars.h.repeat(w)}${chars.br}`;
-}
-
-function quoteCssContent(value) {
-  return `"${String(value).replaceAll("\\", "\\\\").replaceAll('"', '\\"')}"`;
-}
-
-function applyBorderTheme() {
-  const root = document.documentElement;
-  const blockChars = state.borderPreset.block;
-  const cardChars = state.borderPreset.card;
-
-  root.style.setProperty("--block-v", "#3a5058");
-  root.style.setProperty("--card-v", "#3a5058");
-  root.style.setProperty("--block-top-line", quoteCssContent(buildAsciiLine(blockChars, state.lineWidths.block, "top")));
-  root.style.setProperty("--block-bottom-line", quoteCssContent(buildAsciiLine(blockChars, state.lineWidths.block, "bottom")));
-  root.style.setProperty("--card-top-line", quoteCssContent(buildAsciiLine(cardChars, state.lineWidths.card, "top")));
-  root.style.setProperty("--card-bottom-line", quoteCssContent(buildAsciiLine(cardChars, state.lineWidths.card, "bottom")));
-}
-
 function resolveBorderTheme() {
   const borders = state.modules.borders || {};
-  const presets = borders.presets || {};
   const mobile = borders.mobile || {};
   const breakpoint = Number(mobile.breakpoint) || 760;
   const isMobile = window.innerWidth <= breakpoint;
   const activeKey = isMobile ? (mobile.active || borders.active || "mixed") : (borders.active || "mixed");
-  const chosen = presets[activeKey] || presets.mixed;
-
-  if (chosen) {
-    state.borderPreset = {
-      pane: chosen.pane || state.borderPreset.pane,
-      block: chosen.block || state.borderPreset.block,
-      card: chosen.card || state.borderPreset.card
-    };
-  }
-
-  const widths = borders.lineWidths || {};
-  const mobileWidths = isMobile ? (mobile.lineWidths || {}) : {};
-  state.lineWidths = {
-    ...state.lineWidths,
-    ...widths,
-    ...mobileWidths
-  };
-
-  applyBorderTheme();
+  document.documentElement.setAttribute("data-border-preset", activeKey);
 }
 
 function renderTopBar(siteTitle) {
@@ -234,7 +119,7 @@ function renderTopBar(siteTitle) {
 
   return `
     <section class="statusbar" role="status" aria-live="polite">
-      <div class="status-left">[ dev@portfolio ]</div>
+      <div class="status-left">[ Mohammad_Ibraheem_Qureshi / portfolio ]</div>
       <div class="status-mid">section:${esc(getCurrentPageTitle().toLowerCase())}</div>
       <div class="status-right">${esc(dateString())} ${esc(timeString())} | ${cols}x${rows}</div>
     </section>
@@ -258,11 +143,10 @@ function renderNavPane(navItems) {
 
   return `
     <section class="pane pane-nav">
-      <header class="pane-header">${asciiPaneHeader("Navigation", state.lineWidths.paneNav)}</header>
+      <header class="pane-header">[ Navigation ]</header>
       <div class="pane-body">
         <ul class="nav-list">${navButtons}</ul>
       </div>
-      <footer class="pane-footer">${asciiPaneFooter(state.lineWidths.paneNav)}</footer>
     </section>
   `;
 }
@@ -317,7 +201,7 @@ function renderExperienceContent() {
       (item) => `
         <article class="timeline-item">
           <div class="item-title">${esc(item.title)}</div>
-          <div class="item-subtitle">${esc(item.organization)} | ${esc(item.location)} | ${esc(item.start)} -> ${esc(item.end)}</div>
+          <div class="item-subtitle"><span class="meta-accent">${esc(item.organization)}</span> | ${esc(item.location)} | ${esc(item.start)} -> ${esc(item.end)}</div>
           <ul class="plain-list">
             ${(item.bullets || []).map((b) => `<li>${esc(b)}</li>`).join("")}
           </ul>
@@ -342,7 +226,7 @@ function renderEducationContent() {
         (item) => `
           <article class="edu-item">
             <div class="item-title">${esc(item.degree)}</div>
-            <div class="item-subtitle">${esc(item.institution)} | ${esc(item.start)} -> ${esc(item.end)}</div>
+            <div class="item-subtitle"><span class="meta-accent">${esc(item.institution)}</span> | ${esc(item.start)} -> ${esc(item.end)}</div>
             <ul class="plain-list">
               ${(item.details || []).map((d) => `<li>${esc(d)}</li>`).join("")}
             </ul>
@@ -416,7 +300,7 @@ function renderCpContent() {
       (e) => `
       <article class="cp-item">
         <div class="item-title">${esc(e.event)}</div>
-        <div class="item-subtitle">${esc(e.venue)}</div>
+        <div class="item-subtitle"><span class="meta-accent">${esc(e.venue)}</span></div>
         <div><span class="label">Position:</span> ${esc(e.position)}</div>
       </article>
     `
@@ -474,7 +358,7 @@ function renderSidePane() {
 
   return `
     <section class="pane pane-side">
-      <header class="pane-header">${asciiPaneHeader("Input: mouse / keyboard", state.lineWidths.paneSide)}</header>
+      <header class="pane-header">[ Info ]</header>
       <div class="pane-body">
         <section class="block">
           <h2 class="section-title">Session</h2>
@@ -490,16 +374,7 @@ function renderSidePane() {
             <li><span class="badge">city</span> ${esc(profile.location)}</li>
           </ul>
         </section>
-        <section class="block">
-          <h2 class="section-title">Command Hints</h2>
-          <ul class="right-list">
-            <li><span class="badge">j/k</span> move in navigation</li>
-            <li><span class="badge">enter</span> open selected section</li>
-            <li><span class="badge">click</span> activate nav item</li>
-          </ul>
-        </section>
       </div>
-      <footer class="pane-footer">${asciiPaneFooter(state.lineWidths.paneSide)}</footer>
     </section>
   `;
 }
@@ -515,27 +390,17 @@ function renderLayout() {
       <main class="tui-main">
         ${renderNavPane(navItems)}
         <section class="pane pane-content">
-          <header class="pane-header">${asciiPaneHeader(esc(getCurrentPageTitle()), state.lineWidths.paneMain)}</header>
+          <header class="pane-header">[ ${esc(getCurrentPageTitle())} ]</header>
           <div class="pane-body" id="main-pane-body">${getPageContent()}</div>
-          <footer class="pane-footer">${asciiPaneFooter(state.lineWidths.paneMain)}</footer>
         </section>
         ${renderSidePane()}
       </main>
-      <footer class="keybar">
-        <div class="hints">
-          <span><strong>[j/k]</strong> move</span>
-          <span><strong>[↑/↓]</strong> move</span>
-          <span><strong>[enter]</strong> open</span>
-          <span><strong>[mouse]</strong> click/scroll/hover</span>
-        </div>
-      </footer>
     </div>
   `;
 
   wireNavEvents();
   setupPanes();
   setPaneFocus(0);
-  fitPaneBordersToLayout();
   updateClock();
 }
 
@@ -557,12 +422,6 @@ function setPaneFocus(index) {
 function wireNavEvents() {
   const buttons = document.querySelectorAll(".nav-item");
   buttons.forEach((button) => {
-    button.addEventListener("mouseenter", () => {
-      const idx = Number(button.dataset.index || 0);
-      state.selectedNav = idx;
-      paintNavSelection();
-    });
-
     button.addEventListener("click", () => {
       const href = button.dataset.href;
       if (href) {
@@ -584,47 +443,6 @@ function paintNavSelection() {
   });
 }
 
-function openSelectedNav() {
-  const target = document.querySelector(`.nav-item[data-index="${state.selectedNav}"]`);
-  if (target && target.dataset.href) {
-    window.location.href = target.dataset.href;
-  }
-}
-
-function moveNav(step) {
-  const navItems = getNavItems();
-  if (!navItems.length) {
-    return;
-  }
-  const count = navItems.length;
-  state.selectedNav = (state.selectedNav + step + count) % count;
-  paintNavSelection();
-
-  const target = document.querySelector(`.nav-item[data-index="${state.selectedNav}"]`);
-  if (target) {
-    target.scrollIntoView({ block: "nearest" });
-  }
-}
-
-function scrollActivePane(direction) {
-  const pane = state.panes[state.focusPane];
-  if (!pane) {
-    return;
-  }
-  const body = pane.querySelector(".pane-body");
-  if (body) {
-    body.scrollBy({ top: direction * 36, behavior: "auto" });
-  }
-}
-
-function cyclePaneFocus() {
-  if (!state.panes.length) {
-    return;
-  }
-  const next = (state.focusPane + 1) % state.panes.length;
-  setPaneFocus(next);
-}
-
 function updateClock() {
   const status = document.querySelector(".status-right");
   if (!status) {
@@ -641,36 +459,13 @@ function updateClock() {
   setInterval(render, 1000);
 }
 
-function onKeyDown(event) {
-  const key = event.key.toLowerCase();
-
-  if (key === "enter") {
-    event.preventDefault();
-    openSelectedNav();
-    return;
-  }
-
-  if (key === "arrowup" || key === "k") {
-    event.preventDefault();
-    moveNav(-1);
-    return;
-  }
-
-  if (key === "arrowdown" || key === "j") {
-    event.preventDefault();
-    moveNav(1);
-  }
-}
-
 async function boot() {
   try {
     await loadData();
     resolveBorderTheme();
     renderLayout();
-    window.addEventListener("keydown", onKeyDown);
     window.addEventListener("resize", () => {
       resolveBorderTheme();
-      fitPaneBordersToLayout();
       const status = document.querySelector(".status-right");
       if (status) {
         status.textContent = `${dateString()} ${timeString()} | ${window.innerWidth}x${window.innerHeight}`;

@@ -1,5 +1,5 @@
 {
-  "active": "classic-single",
+  "active": "mixed",
   "lineWidths": {
     "paneNav": 36,
     "paneMain": 66,
@@ -9,7 +9,7 @@
   },
   "mobile": {
     "breakpoint": 760,
-    "active": "ascii",
+    "active": "mixed",
     "lineWidths": {
       "paneNav": 28,
       "paneMain": 42,
