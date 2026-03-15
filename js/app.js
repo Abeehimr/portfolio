@@ -19,36 +19,86 @@ function makeLink(url, label) {
 }
 
 function makeTable(headers, rows) {
-  const table = document.createElement("table");
-  table.setAttribute("border", "1");
-  table.setAttribute("cellpadding", "6");
-  table.setAttribute("cellspacing", "0");
+  const MAX_COL_WIDTH = 38;
 
-  const thead = document.createElement("thead");
-  const headRow = document.createElement("tr");
-  headers.forEach((header) => {
-    headRow.appendChild(el("th", header));
-  });
-  thead.appendChild(headRow);
-  table.appendChild(thead);
+  const wrapCell = (value, width) => {
+    const text = String(value || "");
+    if (text.length <= width) return [text];
 
-  const tbody = document.createElement("tbody");
-  rows.forEach((rowData) => {
-    const row = document.createElement("tr");
-    rowData.forEach((cellData) => {
-      const td = document.createElement("td");
-      if (cellData instanceof Node) {
-        td.appendChild(cellData);
-      } else {
-        td.textContent = String(cellData);
+    const words = text.split(" ");
+    const lines = [];
+    let current = "";
+
+    words.forEach((word) => {
+      if (word.length > width) {
+        if (current) {
+          lines.push(current);
+          current = "";
+        }
+        for (let i = 0; i < word.length; i += width) {
+          lines.push(word.slice(i, i + width));
+        }
+        return;
       }
-      row.appendChild(td);
-    });
-    tbody.appendChild(row);
-  });
-  table.appendChild(tbody);
 
-  return table;
+      if (!current) {
+        current = word;
+        return;
+      }
+
+      const candidate = `${current} ${word}`;
+      if (candidate.length <= width) {
+        current = candidate;
+      } else {
+        lines.push(current);
+        current = word;
+      }
+    });
+
+    if (current) lines.push(current);
+    return lines.length ? lines : [""];
+  };
+
+  const drawBorder = (widths) => `+${widths.map((w) => "-".repeat(w + 2)).join("+")}+`;
+
+  const drawWrappedRow = (cols, widths) => {
+    const wrapped = cols.map((value, i) => wrapCell(value, widths[i]));
+    const rowHeight = wrapped.reduce((max, lines) => Math.max(max, lines.length), 1);
+    const rowLines = [];
+
+    for (let lineIdx = 0; lineIdx < rowHeight; lineIdx += 1) {
+      const line = `|${wrapped
+        .map((lines, colIdx) => ` ${(lines[lineIdx] || "").padEnd(widths[colIdx], " ")} `)
+        .join("|")}|`;
+      rowLines.push(line);
+    }
+
+    return rowLines;
+  };
+
+  const plainRows = rows.map((row) => row.map((cell) => {
+    if (cell instanceof Node) {
+      return (cell.textContent || "").trim();
+    }
+    return String(cell);
+  }));
+
+  const widths = headers.map((header, index) => {
+    const values = plainRows.map((row) => row[index] || "");
+    const maxCell = values.reduce((max, value) => Math.max(max, value.length), 0);
+    return Math.min(Math.max(header.length, maxCell), MAX_COL_WIDTH);
+  });
+
+  const lines = [drawBorder(widths), ...drawWrappedRow(headers, widths), drawBorder(widths)];
+  plainRows.forEach((row) => {
+    lines.push(...drawWrappedRow(row, widths));
+  });
+  lines.push(drawBorder(widths));
+
+  const pre = document.createElement("pre");
+  pre.className = "ascii-table";
+  pre.textContent = lines.join("\n");
+  return pre;
 }
 
 function makeCard(title, subtitle, bullets) {
@@ -150,7 +200,8 @@ function renderNav(data, currentPage) {
   data.site.navigation.forEach((item, index) => {
     const anchor = makeLink(item.href, item.label);
     if (item.page === currentPage) {
-      const strong = document.createElement("strong");
+      const strong = document.createElement("span");
+      strong.className = "active-nav";
       anchor.setAttribute("aria-current", "page");
       strong.appendChild(anchor);
       line.appendChild(strong);
@@ -165,7 +216,19 @@ function renderNav(data, currentPage) {
 
   nav.appendChild(line);
   navRoot.appendChild(nav);
-  navRoot.appendChild(document.createElement("hr"));
+}
+
+function renderStatusBar(currentPage) {
+  const existing = document.getElementById("status-bar");
+  if (existing) {
+    existing.remove();
+  }
+
+  const footer = document.createElement("footer");
+  footer.id = "status-bar";
+  footer.appendChild(el("span", `echo ${currentPage}`));
+  footer.appendChild(el("span", "ready"));
+  document.body.appendChild(footer);
 }
 
 function renderHome(root, data) {
@@ -176,7 +239,9 @@ function renderHome(root, data) {
 
   root.appendChild(el("h2", "Skills"));
   const skillRows = data.skills.map((group) => [group.category, group.items.join(", ")]);
-  root.appendChild(makeTable(["Category", "Details"], skillRows));
+  const skillTable = makeTable(["Category", "Details"], skillRows);
+  skillTable.classList.add("skills-table");
+  root.appendChild(skillTable);
 
   root.appendChild(el("h2", "Professional Profiles"));
   const profiles = document.createElement("ul");
@@ -281,6 +346,7 @@ async function start() {
   const content = document.getElementById("content");
   if (!page || !content) return;
 
+  document.body.classList.add("tui");
   const data = await loadData();
   renderNav(data, page);
 
@@ -290,6 +356,8 @@ async function start() {
   } else {
     content.appendChild(el("p", "Page is not configured."));
   }
+
+  renderStatusBar(page);
 }
 
 start().catch((err) => {
