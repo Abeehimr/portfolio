@@ -1,368 +1,579 @@
 const SOURCE_PATH = "data/source.json";
 
-function el(tag, text) {
-  const node = document.createElement(tag);
-  if (text !== undefined && text !== null) {
-    node.textContent = String(text);
+const state = {
+  page: document.body.dataset.page || "home",
+  modules: null,
+  selectedNav: 0,
+  focusPane: 0,
+  panes: []
+};
+
+const pageTitles = {
+  home: "Home",
+  experience: "Experience",
+  education: "Education",
+  projects: "Projects",
+  cp: "Competitive Programming"
+};
+
+const safe = (value, fallback = "-") => {
+  if (value === undefined || value === null || value === "") {
+    return fallback;
   }
-  return node;
-}
+  return String(value);
+};
 
-function makeLink(url, label) {
-  const a = el("a", label || url);
-  a.href = url;
-  if (/^https?:\/\//.test(url)) {
-    a.target = "_blank";
-    a.rel = "noopener noreferrer";
-  }
-  return a;
-}
-
-function makeTable(headers, rows) {
-  const MAX_COL_WIDTH = 38;
-
-  const wrapCell = (value, width) => {
-    const text = String(value || "");
-    if (text.length <= width) return [text];
-
-    const words = text.split(" ");
-    const lines = [];
-    let current = "";
-
-    words.forEach((word) => {
-      if (word.length > width) {
-        if (current) {
-          lines.push(current);
-          current = "";
-        }
-        for (let i = 0; i < word.length; i += width) {
-          lines.push(word.slice(i, i + width));
-        }
-        return;
-      }
-
-      if (!current) {
-        current = word;
-        return;
-      }
-
-      const candidate = `${current} ${word}`;
-      if (candidate.length <= width) {
-        current = candidate;
-      } else {
-        lines.push(current);
-        current = word;
-      }
-    });
-
-    if (current) lines.push(current);
-    return lines.length ? lines : [""];
-  };
-
-  const drawBorder = (widths) => `+${widths.map((w) => "-".repeat(w + 2)).join("+")}+`;
-
-  const drawWrappedRow = (cols, widths) => {
-    const wrapped = cols.map((value, i) => wrapCell(value, widths[i]));
-    const rowHeight = wrapped.reduce((max, lines) => Math.max(max, lines.length), 1);
-    const rowLines = [];
-
-    for (let lineIdx = 0; lineIdx < rowHeight; lineIdx += 1) {
-      const line = `|${wrapped
-        .map((lines, colIdx) => ` ${(lines[lineIdx] || "").padEnd(widths[colIdx], " ")} `)
-        .join("|")}|`;
-      rowLines.push(line);
-    }
-
-    return rowLines;
-  };
-
-  const plainRows = rows.map((row) => row.map((cell) => {
-    if (cell instanceof Node) {
-      return (cell.textContent || "").trim();
-    }
-    return String(cell);
-  }));
-
-  const widths = headers.map((header, index) => {
-    const values = plainRows.map((row) => row[index] || "");
-    const maxCell = values.reduce((max, value) => Math.max(max, value.length), 0);
-    return Math.min(Math.max(header.length, maxCell), MAX_COL_WIDTH);
-  });
-
-  const lines = [drawBorder(widths), ...drawWrappedRow(headers, widths), drawBorder(widths)];
-  plainRows.forEach((row) => {
-    lines.push(...drawWrappedRow(row, widths));
-  });
-  lines.push(drawBorder(widths));
-
-  const pre = document.createElement("pre");
-  pre.className = "ascii-table";
-  pre.textContent = lines.join("\n");
-  return pre;
-}
-
-function makeCard(title, subtitle, bullets) {
-  const card = document.createElement("section");
-  card.className = "card";
-  card.appendChild(el("h3", title));
-  if (subtitle) {
-    card.appendChild(el("p", subtitle));
-  }
-
-  if (bullets && bullets.length) {
-    const ul = document.createElement("ul");
-    bullets.forEach((item) => {
-      ul.appendChild(el("li", item));
-    });
-    card.appendChild(ul);
-  }
-
-  return card;
-}
-
-function makeProjectCard(project) {
-  const details = document.createElement("details");
-  details.className = "project-card";
-
-  const summary = document.createElement("summary");
-  summary.appendChild(el("strong", project.title));
-  details.appendChild(summary);
-
-  const body = document.createElement("div");
-  body.className = "project-body";
-
-  const bullets = document.createElement("ul");
-  bullets.appendChild(el("li", `Technologies: ${project.techStack.join(", ")}`));
-  bullets.appendChild(el("li", project.description));
-  if (project.details) {
-    bullets.appendChild(el("li", project.details));
-  }
-  body.appendChild(bullets);
-
-  const links = [];
-  if (project.githubUrl) {
-    links.push({ label: "GitHub", url: project.githubUrl });
-  }
-  if (project.demoUrl) {
-    links.push({ label: "Live Demo", url: project.demoUrl });
-  }
-
-  if (links.length > 0) {
-    const linkWrap = document.createElement("p");
-    linkWrap.className = "project-links";
-    links.forEach((item, index) => {
-      linkWrap.appendChild(makeLink(item.url, item.label));
-      if (index < links.length - 1) {
-        linkWrap.appendChild(document.createTextNode(" | "));
-      }
-    });
-    body.appendChild(linkWrap);
-  }
-
-  details.appendChild(body);
-  return details;
-}
+const esc = (value) =>
+  safe(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
 
 async function loadData() {
-  const sourceResponse = await fetch(SOURCE_PATH);
-  const source = await sourceResponse.json();
-  const modules = source.modules || {};
+  const source = await fetch(SOURCE_PATH);
+  if (!source.ok) {
+    throw new Error(`Unable to load ${SOURCE_PATH}`);
+  }
 
-  const entries = Object.entries(modules);
+  const sourceJson = await source.json();
+  const modules = sourceJson.modules || {};
+  const moduleEntries = Object.entries(modules);
+
   const loaded = await Promise.all(
-    entries.map(async ([key, path]) => {
+    moduleEntries.map(async ([key, path]) => {
       const response = await fetch(path);
-      const json = await response.json();
-      return [key, json];
+      if (!response.ok) {
+        throw new Error(`Unable to load module: ${key}`);
+      }
+      return [key, await response.json()];
     })
   );
 
-  const moduleData = Object.fromEntries(loaded);
-
-  return {
-    site: moduleData.site,
-    profile: moduleData.profile,
-    experience: moduleData.experience,
-    education: moduleData.education,
-    skills: moduleData.skills,
-    projects: moduleData.projects,
-    cpData: moduleData.cpData
-  };
+  state.modules = Object.fromEntries(loaded);
 }
 
-function renderNav(data, currentPage) {
-  const navRoot = document.getElementById("nav");
-  if (!navRoot) return;
-
-  const nav = document.createElement("nav");
-  const line = document.createElement("p");
-  line.className = "nav-line";
-  data.site.navigation.forEach((item, index) => {
-    const anchor = makeLink(item.href, item.label);
-    if (item.page === currentPage) {
-      const strong = document.createElement("span");
-      strong.className = "active-nav";
-      anchor.setAttribute("aria-current", "page");
-      strong.appendChild(anchor);
-      line.appendChild(strong);
-    } else {
-      line.appendChild(anchor);
-    }
-
-    if (index < data.site.navigation.length - 1) {
-      line.appendChild(document.createTextNode(" | "));
-    }
-  });
-
-  nav.appendChild(line);
-  navRoot.appendChild(nav);
+function renderError(message) {
+  const content = document.getElementById("content");
+  content.innerHTML = `
+    <div class="tui">
+      <section class="statusbar">[error] ${esc(message)}</section>
+      <main class="tui-main">
+        <section class="pane pane-content focused">
+          <header class="pane-header">System Error</header>
+          <div class="pane-body">
+            <p>Data modules could not be loaded.</p>
+            <p>Check file paths in data/source.json.</p>
+          </div>
+        </section>
+      </main>
+      <footer class="keybar">[q] quit [r] reload</footer>
+    </div>
+  `;
 }
 
-function renderStatusBar(currentPage) {
-  const existing = document.getElementById("status-bar");
-  if (existing) {
-    existing.remove();
+function getNavItems() {
+  const site = state.modules.site || {};
+  const nav = site.navigation || [];
+  return nav;
+}
+
+function getCurrentPageTitle() {
+  return pageTitles[state.page] || "Portfolio";
+}
+
+function timeString() {
+  const now = new Date();
+  const hh = String(now.getHours()).padStart(2, "0");
+  const mm = String(now.getMinutes()).padStart(2, "0");
+  const ss = String(now.getSeconds()).padStart(2, "0");
+  return `${hh}:${mm}:${ss}`;
+}
+
+function dateString() {
+  const now = new Date();
+  const yyyy = now.getFullYear();
+  const mm = String(now.getMonth() + 1).padStart(2, "0");
+  const dd = String(now.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+function findSelectedNavIndex(navItems) {
+  const idx = navItems.findIndex((item) => item.page === state.page);
+  return idx >= 0 ? idx : 0;
+}
+
+function renderTopBar(siteTitle) {
+  const profile = state.modules.profile || {};
+  const rows = window.innerHeight;
+  const cols = window.innerWidth;
+
+  return `
+    <section class="statusbar" role="status" aria-live="polite">
+      <div class="status-left">${esc(safe(profile.name, "user"))}@${esc(safe(siteTitle, "portfolio"))}</div>
+      <div class="status-mid">section:${esc(getCurrentPageTitle().toLowerCase())}</div>
+      <div class="status-right">${esc(dateString())} ${esc(timeString())} | ${cols}x${rows}</div>
+    </section>
+  `;
+}
+
+function renderNavPane(navItems) {
+  const navButtons = navItems
+    .map((item, index) => {
+      const active = index === state.selectedNav ? "active" : "";
+      const marker = index === state.selectedNav ? ">" : " ";
+      return `
+        <li>
+          <button class="nav-item ${active}" data-index="${index}" data-href="${esc(item.href)}" data-page="${esc(item.page)}" type="button">
+            <span class="nav-marker">${esc(marker)}</span>${esc(item.label)}
+          </button>
+        </li>
+      `;
+    })
+    .join("");
+
+  return `
+    <section class="pane pane-nav">
+      <header class="pane-header">[ Navigation ]</header>
+      <div class="pane-body">
+        <ul class="nav-list">${navButtons}</ul>
+      </div>
+    </section>
+  `;
+}
+
+function renderProfileBlock() {
+  const profile = state.modules.profile || {};
+  return `
+    <section class="block">
+      <h2 class="section-title">Profile</h2>
+      <div class="kv"><span class="label">Name</span><span>${esc(profile.name)}</span></div>
+      <div class="kv"><span class="label">Location</span><span>${esc(profile.location)}</span></div>
+      <div class="kv"><span class="label">Email</span><span><a href="mailto:${esc(profile.email)}">${esc(profile.email)}</a></span></div>
+      <div class="kv"><span class="label">Phone</span><span>${esc(profile.phone)}</span></div>
+      <div class="kv"><span class="label">GitHub</span><span><a target="_blank" rel="noopener noreferrer" href="${esc(profile.github)}">${esc(profile.github)}</a></span></div>
+      <div class="kv"><span class="label">LinkedIn</span><span><a target="_blank" rel="noopener noreferrer" href="${esc(profile.linkedin)}">${esc(profile.linkedin)}</a></span></div>
+    </section>
+  `;
+}
+
+function renderHomeContent() {
+  const profile = state.modules.profile || {};
+  const skills = state.modules.skills || [];
+
+  const skillsHtml = skills
+    .slice(0, 4)
+    .map(
+      (group) => `
+        <div class="skill-group">
+          <div class="item-title">${esc(group.category)}</div>
+          <div>${esc((group.items || []).join(" | "))}</div>
+        </div>
+      `
+    )
+    .join("");
+
+  const ascii = [
+    "┌ Portfolio Dashboard ──────────────────────────┐",
+    "│ text-first • keyboard-ready • terminal-ui      │",
+    "└────────────────────────────────────────────────┘"
+  ].join("\n");
+
+  return `
+    <h1 class="section-title">About</h1>
+    <p class="tagline">${esc(profile.summary)}</p>
+    <pre class="ascii-card">${esc(ascii)}</pre>
+    ${renderProfileBlock()}
+    <section class="block">
+      <h2 class="section-title">Top Skills</h2>
+      ${skillsHtml}
+    </section>
+  `;
+}
+
+function renderExperienceContent() {
+  const items = state.modules.experience || [];
+
+  const timeline = items
+    .map(
+      (item) => `
+        <article class="timeline-item">
+          <div class="item-title">${esc(item.title)}</div>
+          <div class="item-subtitle">${esc(item.organization)} | ${esc(item.location)} | ${esc(item.start)} -> ${esc(item.end)}</div>
+          <ul class="plain-list">
+            ${(item.bullets || []).map((b) => `<li>${esc(b)}</li>`).join("")}
+          </ul>
+        </article>
+      `
+    )
+    .join("");
+
+  return `
+    <h1 class="section-title">Experience Timeline</h1>
+    ${timeline}
+  `;
+}
+
+function renderEducationContent() {
+  const items = state.modules.education || [];
+
+  return `
+    <h1 class="section-title">Education</h1>
+    ${items
+      .map(
+        (item) => `
+          <article class="edu-item">
+            <div class="item-title">${esc(item.degree)}</div>
+            <div class="item-subtitle">${esc(item.institution)} | ${esc(item.start)} -> ${esc(item.end)}</div>
+            <ul class="plain-list">
+              ${(item.details || []).map((d) => `<li>${esc(d)}</li>`).join("")}
+            </ul>
+          </article>
+        `
+      )
+      .join("")}
+  `;
+}
+
+function renderProjectsContent() {
+  const data = state.modules.projects || {};
+
+  return `
+    <h1 class="section-title">Projects</h1>
+    ${Object.entries(data)
+      .map(([category, projects]) => {
+        const cards = (projects || [])
+          .map((project) => {
+            const links = [
+              project.githubUrl
+                ? `<a target="_blank" rel="noopener noreferrer" href="${esc(project.githubUrl)}">source</a>`
+                : "",
+              project.demoUrl
+                ? `<a target="_blank" rel="noopener noreferrer" href="${esc(project.demoUrl)}">demo</a>`
+                : ""
+            ]
+              .filter(Boolean)
+              .join(" | ");
+
+            return `
+              <article class="project-card">
+                <div class="item-title">${esc(project.title)}</div>
+                <div class="tech">[${esc((project.techStack || []).join(", "))}]</div>
+                <p>${esc(project.description)}</p>
+                ${project.details ? `<p class="label">${esc(project.details)}</p>` : ""}
+                ${links ? `<p>${links}</p>` : ""}
+              </article>
+            `;
+          })
+          .join("");
+
+        return `
+          <section class="block">
+            <h2 class="section-title">${esc(category)}</h2>
+            ${cards}
+          </section>
+        `;
+      })
+      .join("")}
+  `;
+}
+
+function renderCpContent() {
+  const cp = state.modules.cpData || {};
+  const profiles = cp.profiles || [];
+  const honors = cp.honors || [];
+  const events = cp.events || [];
+
+  const profileList = profiles
+    .map(
+      (p) =>
+        `<li><span class="badge">${esc(p.label)}:</span> <a target="_blank" rel="noopener noreferrer" href="${esc(p.url)}">${esc(p.url)}</a></li>`
+    )
+    .join("");
+
+  const honorsList = honors.map((h) => `<li>${esc(h)}</li>`).join("");
+
+  const eventsList = events
+    .map(
+      (e) => `
+      <article class="cp-item">
+        <div class="item-title">${esc(e.event)}</div>
+        <div class="item-subtitle">${esc(e.venue)}</div>
+        <div><span class="label">Position:</span> ${esc(e.position)}</div>
+      </article>
+    `
+    )
+    .join("");
+
+  return `
+    <h1 class="section-title">Competitive Programming</h1>
+    <section class="block">
+      <h2 class="section-title">Profiles</h2>
+      <ul class="link-list">${profileList}</ul>
+    </section>
+    <section class="block">
+      <h2 class="section-title">Honors</h2>
+      <ul class="plain-list">${honorsList}</ul>
+    </section>
+    <section class="block">
+      <h2 class="section-title">Events</h2>
+      ${eventsList}
+    </section>
+  `;
+}
+
+function getPageContent() {
+  switch (state.page) {
+    case "experience":
+      return renderExperienceContent();
+    case "education":
+      return renderEducationContent();
+    case "projects":
+      return renderProjectsContent();
+    case "cp":
+      return renderCpContent();
+    case "home":
+    default:
+      return renderHomeContent();
   }
-
-  const footer = document.createElement("footer");
-  footer.id = "status-bar";
-  footer.appendChild(el("span", `echo ${currentPage}`));
-  footer.appendChild(el("span", "ready"));
-  document.body.appendChild(footer);
 }
 
-function renderHome(root, data) {
-  root.appendChild(el("h1", data.profile.name));
+function renderSidePane() {
+  const profile = state.modules.profile || {};
+  const projectData = state.modules.projects || {};
+  const projectCount = Object.values(projectData).reduce(
+    (acc, list) => acc + (Array.isArray(list) ? list.length : 0),
+    0
+  );
 
-  root.appendChild(el("h2", "Professional Summary"));
-  root.appendChild(el("p", data.profile.summary));
+  const sections = [
+    `active:${getCurrentPageTitle().toLowerCase()}`,
+    `skills:${(state.modules.skills || []).length}`,
+    `projects:${projectCount}`,
+    `experience:${(state.modules.experience || []).length}`,
+    `events:${((state.modules.cpData || {}).events || []).length}`
+  ];
 
-  root.appendChild(el("h2", "Skills"));
-  const skillRows = data.skills.map((group) => [group.category, group.items.join(", ")]);
-  const skillTable = makeTable(["Category", "Details"], skillRows);
-  skillTable.classList.add("skills-table");
-  root.appendChild(skillTable);
-
-  root.appendChild(el("h2", "Professional Profiles"));
-  const profiles = document.createElement("ul");
-
-  const emailItem = document.createElement("li");
-  emailItem.appendChild(document.createTextNode("Email: "));
-  emailItem.appendChild(makeLink(`mailto:${data.profile.email}`, data.profile.email));
-  profiles.appendChild(emailItem);
-
-  const phoneItem = document.createElement("li");
-  phoneItem.textContent = `Phone: ${data.profile.phone}`;
-  profiles.appendChild(phoneItem);
-
-  const linkedinItem = document.createElement("li");
-  linkedinItem.appendChild(document.createTextNode("LinkedIn: "));
-  linkedinItem.appendChild(makeLink(data.profile.linkedin, data.profile.linkedin));
-  profiles.appendChild(linkedinItem);
-
-  const githubItem = document.createElement("li");
-  githubItem.appendChild(document.createTextNode("GitHub: "));
-  githubItem.appendChild(makeLink(data.profile.github, data.profile.github));
-  profiles.appendChild(githubItem);
-
-  root.appendChild(profiles);
+  return `
+    <section class="pane pane-side">
+      <header class="pane-header">[ Context <span class="muted">mouse + keyboard</span> ]</header>
+      <div class="pane-body">
+        <section class="block">
+          <h2 class="section-title">Session</h2>
+          <ul class="right-list">
+            ${sections.map((item) => `<li>${esc(item)}</li>`).join("")}
+          </ul>
+        </section>
+        <section class="block">
+          <h2 class="section-title">Quick Contact</h2>
+          <ul class="right-list">
+            <li><span class="badge">mail</span> ${esc(profile.email)}</li>
+            <li><span class="badge">phone</span> ${esc(profile.phone)}</li>
+            <li><span class="badge">city</span> ${esc(profile.location)}</li>
+          </ul>
+        </section>
+        <section class="block">
+          <h2 class="section-title">Command Hints</h2>
+          <ul class="right-list">
+            <li><span class="badge">tab</span> switch pane focus</li>
+            <li><span class="badge">j/k</span> move in nav or scroll panel</li>
+            <li><span class="badge">enter</span> open selected section</li>
+            <li><span class="badge">click</span> activate nav item</li>
+          </ul>
+        </section>
+      </div>
+    </section>
+  `;
 }
 
-function renderExperience(root, data) {
-  root.appendChild(el("h1", "Experience"));
+function renderLayout() {
+  const content = document.getElementById("content");
+  const navItems = getNavItems();
+  state.selectedNav = findSelectedNavIndex(navItems);
 
-  data.experience.forEach((item) => {
-    const title = `${item.title} - ${item.organization}`;
-    const subtitle = `${item.start} - ${item.end}`;
-    root.appendChild(makeCard(title, subtitle, item.bullets));
+  content.innerHTML = `
+    <div class="tui">
+      ${renderTopBar((state.modules.site || {}).title || "portfolio")}
+      <main class="tui-main">
+        ${renderNavPane(navItems)}
+        <section class="pane pane-content">
+          <header class="pane-header">[ ${esc(getCurrentPageTitle())} ]</header>
+          <div class="pane-body" id="main-pane-body">${getPageContent()}</div>
+        </section>
+        ${renderSidePane()}
+      </main>
+      <footer class="keybar">
+        <div class="hints">
+          <span><strong>[tab]</strong> pane</span>
+          <span><strong>[j/k]</strong> move</span>
+          <span><strong>[↑/↓]</strong> move</span>
+          <span><strong>[enter]</strong> open</span>
+          <span><strong>[mouse]</strong> click/scroll/hover</span>
+        </div>
+      </footer>
+    </div>
+  `;
+
+  wireNavEvents();
+  setupPanes();
+  setPaneFocus(0);
+  updateClock();
+}
+
+function setupPanes() {
+  const paneNodes = document.querySelectorAll(".pane");
+  state.panes = Array.from(paneNodes);
+  state.panes.forEach((pane, index) => {
+    pane.addEventListener("click", () => setPaneFocus(index));
   });
 }
 
-function renderEducation(root, data) {
-  root.appendChild(el("h1", "Education"));
-
-  data.education.forEach((item) => {
-    const title = item.degree;
-    const subtitle = `${item.institution} | ${item.start} - ${item.end}`;
-    root.appendChild(makeCard(title, subtitle, item.details));
+function setPaneFocus(index) {
+  state.focusPane = index;
+  state.panes.forEach((pane, idx) => {
+    pane.classList.toggle("focused", idx === index);
   });
 }
 
-function renderProjects(root, data) {
-  root.appendChild(el("h1", "Projects"));
-
-  Object.entries(data.projects).forEach(([category, projects]) => {
-    const categoryBlock = document.createElement("section");
-    categoryBlock.className = "project-category";
-
-    categoryBlock.appendChild(el("h2", category));
-    projects.forEach((project) => {
-      categoryBlock.appendChild(makeProjectCard(project));
+function wireNavEvents() {
+  const buttons = document.querySelectorAll(".nav-item");
+  buttons.forEach((button) => {
+    button.addEventListener("mouseenter", () => {
+      const idx = Number(button.dataset.index || 0);
+      state.selectedNav = idx;
+      paintNavSelection();
     });
-    root.appendChild(categoryBlock);
+
+    button.addEventListener("click", () => {
+      const href = button.dataset.href;
+      if (href) {
+        window.location.href = href;
+      }
+    });
   });
 }
 
-function renderCP(root, data) {
-  root.appendChild(el("h1", "Competitive Programming"));
-
-  root.appendChild(el("h2", "Profiles"));
-  const profileList = document.createElement("ul");
-  data.cpData.profiles.forEach((profile) => {
-    const li = document.createElement("li");
-    li.appendChild(document.createTextNode(`${profile.label}: `));
-    li.appendChild(makeLink(profile.url, profile.url));
-    profileList.appendChild(li);
+function paintNavSelection() {
+  const buttons = document.querySelectorAll(".nav-item");
+  buttons.forEach((button, idx) => {
+    const marker = button.querySelector(".nav-marker");
+    const isActive = idx === state.selectedNav;
+    button.classList.toggle("active", isActive);
+    if (marker) {
+      marker.textContent = isActive ? ">" : " ";
+    }
   });
-  root.appendChild(profileList);
-
-  root.appendChild(el("h2", "Honors and Distinctions"));
-  const honorsList = document.createElement("ul");
-  data.cpData.honors.forEach((honor) => {
-    honorsList.appendChild(el("li", honor));
-  });
-  root.appendChild(honorsList);
-
-  root.appendChild(el("h2", "Contest Results"));
-  const rows = data.cpData.events.map((item, index) => [
-    index + 1,
-    item.event,
-    item.venue,
-    item.position
-  ]);
-  root.appendChild(makeTable(["#", "Event", "Venue", "Position"], rows));
 }
 
-const renderers = {
-  home: renderHome,
-  experience: renderExperience,
-  education: renderEducation,
-  projects: renderProjects,
-  cp: renderCP
-};
+function openSelectedNav() {
+  const target = document.querySelector(`.nav-item[data-index="${state.selectedNav}"]`);
+  if (target && target.dataset.href) {
+    window.location.href = target.dataset.href;
+  }
+}
 
-async function start() {
-  const page = document.body.dataset.page;
-  const content = document.getElementById("content");
-  if (!page || !content) return;
+function moveNav(step) {
+  const navItems = getNavItems();
+  if (!navItems.length) {
+    return;
+  }
+  const count = navItems.length;
+  state.selectedNav = (state.selectedNav + step + count) % count;
+  paintNavSelection();
 
-  document.body.classList.add("tui");
-  const data = await loadData();
-  renderNav(data, page);
+  const target = document.querySelector(`.nav-item[data-index="${state.selectedNav}"]`);
+  if (target) {
+    target.scrollIntoView({ block: "nearest" });
+  }
+}
 
-  const renderer = renderers[page];
-  if (renderer) {
-    renderer(content, data);
-  } else {
-    content.appendChild(el("p", "Page is not configured."));
+function scrollActivePane(direction) {
+  const pane = state.panes[state.focusPane];
+  if (!pane) {
+    return;
+  }
+  const body = pane.querySelector(".pane-body");
+  if (body) {
+    body.scrollBy({ top: direction * 36, behavior: "auto" });
+  }
+}
+
+function cyclePaneFocus() {
+  if (!state.panes.length) {
+    return;
+  }
+  const next = (state.focusPane + 1) % state.panes.length;
+  setPaneFocus(next);
+}
+
+function updateClock() {
+  const status = document.querySelector(".status-right");
+  if (!status) {
+    return;
   }
 
-  renderStatusBar(page);
+  const render = () => {
+    const rows = window.innerHeight;
+    const cols = window.innerWidth;
+    status.textContent = `${dateString()} ${timeString()} | ${cols}x${rows}`;
+  };
+
+  render();
+  setInterval(render, 1000);
 }
 
-start().catch((err) => {
-  const content = document.getElementById("content");
-  if (!content) return;
-  content.appendChild(el("p", "Failed to load data."));
-  content.appendChild(el("pre", String(err)));
-});
+function onKeyDown(event) {
+  const key = event.key.toLowerCase();
+
+  if (key === "tab") {
+    event.preventDefault();
+    cyclePaneFocus();
+    return;
+  }
+
+  if (key === "enter") {
+    if (state.focusPane === 0) {
+      event.preventDefault();
+      openSelectedNav();
+    }
+    return;
+  }
+
+  if (key === "arrowup" || key === "k") {
+    event.preventDefault();
+    if (state.focusPane === 0) {
+      moveNav(-1);
+    } else {
+      scrollActivePane(-1);
+    }
+    return;
+  }
+
+  if (key === "arrowdown" || key === "j") {
+    event.preventDefault();
+    if (state.focusPane === 0) {
+      moveNav(1);
+    } else {
+      scrollActivePane(1);
+    }
+  }
+}
+
+async function boot() {
+  try {
+    await loadData();
+    renderLayout();
+    window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("resize", () => {
+      const status = document.querySelector(".status-right");
+      if (status) {
+        status.textContent = `${dateString()} ${timeString()} | ${window.innerWidth}x${window.innerHeight}`;
+      }
+    });
+  } catch (error) {
+    renderError(error.message);
+  }
+}
+
+boot();
