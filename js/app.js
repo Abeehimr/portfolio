@@ -5,7 +5,19 @@ const state = {
   modules: null,
   selectedNav: 0,
   focusPane: 0,
-  panes: []
+  panes: [],
+  borderPreset: {
+    pane: { tl: "┌", tr: "┐", bl: "└", br: "┘", h: "─", v: "│" },
+    block: { tl: "┌", tr: "┐", bl: "└", br: "┘", h: "─", v: "│" },
+    card: { tl: "├", tr: "┤", bl: "└", br: "┘", h: "─", v: "│" }
+  },
+  lineWidths: {
+    paneNav: 36,
+    paneMain: 58,
+    paneSide: 40,
+    block: 104,
+    card: 104
+  }
 };
 
 const pageTitles = {
@@ -105,13 +117,110 @@ function findSelectedNavIndex(navItems) {
 }
 
 function asciiPaneHeader(label, width = 44) {
+  const chars = state.borderPreset.pane;
   const title = `[ ${label} ]`;
   const fillLen = Math.max(2, width - title.length - 2);
-  return `┌${title}${"─".repeat(fillLen)}┐`;
+  return `${chars.tl}${title}${chars.h.repeat(fillLen)}${chars.tr}`;
 }
 
 function asciiPaneFooter(width = 44) {
-  return `└${"─".repeat(Math.max(2, width))}┘`;
+  const chars = state.borderPreset.pane;
+  const total = Math.max(4, Number(width) || 4);
+  return `${chars.bl}${chars.h.repeat(total - 2)}${chars.br}`;
+}
+
+function getMonospaceCharWidth(refNode) {
+  const probe = document.createElement("span");
+  const refStyle = window.getComputedStyle(refNode || document.body);
+  probe.textContent = "0";
+  probe.style.position = "absolute";
+  probe.style.visibility = "hidden";
+  probe.style.pointerEvents = "none";
+  probe.style.fontFamily = refStyle.fontFamily;
+  probe.style.fontSize = refStyle.fontSize;
+  probe.style.fontWeight = refStyle.fontWeight;
+  probe.style.letterSpacing = refStyle.letterSpacing;
+  document.body.appendChild(probe);
+  const width = probe.getBoundingClientRect().width || 8;
+  probe.remove();
+  return width;
+}
+
+function fitPaneBorderWidth(paneSelector, headerLabel, fallbackWidth) {
+  const pane = document.querySelector(paneSelector);
+  if (!pane) {
+    return;
+  }
+
+  const header = pane.querySelector(".pane-header");
+  const footer = pane.querySelector(".pane-footer");
+  if (!header || !footer) {
+    return;
+  }
+
+  const charWidth = getMonospaceCharWidth(header);
+  const horizontalPadding = 16;
+  const totalWidth = Math.max(4, Math.floor((pane.clientWidth - horizontalPadding) / charWidth));
+  const finalWidth = Number.isFinite(totalWidth) && totalWidth > 4 ? totalWidth : fallbackWidth;
+  const footerWidth = Math.max(4, finalWidth - 2);
+
+  header.textContent = asciiPaneHeader(headerLabel, finalWidth);
+  footer.textContent = asciiPaneFooter(footerWidth);
+}
+
+function fitPaneBordersToLayout() {
+  fitPaneBorderWidth(".pane-nav", "Navigation", state.lineWidths.paneNav);
+  fitPaneBorderWidth(".pane-content", getCurrentPageTitle(), state.lineWidths.paneMain);
+  fitPaneBorderWidth(".pane-side", "Input: mouse / keyboard", state.lineWidths.paneSide);
+}
+
+function buildAsciiLine(chars, width, kind) {
+  const total = Math.max(4, Number(width) || 4);
+  const w = total - 2;
+  if (kind === "top") {
+    return `${chars.tl}${chars.h.repeat(w)}${chars.tr}`;
+  }
+  return `${chars.bl}${chars.h.repeat(w)}${chars.br}`;
+}
+
+function quoteCssContent(value) {
+  return `"${String(value).replaceAll("\\", "\\\\").replaceAll('"', '\\"')}"`;
+}
+
+function applyBorderTheme() {
+  const root = document.documentElement;
+  const blockChars = state.borderPreset.block;
+  const cardChars = state.borderPreset.card;
+
+  root.style.setProperty("--block-v", "#3a5058");
+  root.style.setProperty("--card-v", "#3a5058");
+  root.style.setProperty("--block-top-line", quoteCssContent(buildAsciiLine(blockChars, state.lineWidths.block, "top")));
+  root.style.setProperty("--block-bottom-line", quoteCssContent(buildAsciiLine(blockChars, state.lineWidths.block, "bottom")));
+  root.style.setProperty("--card-top-line", quoteCssContent(buildAsciiLine(cardChars, state.lineWidths.card, "top")));
+  root.style.setProperty("--card-bottom-line", quoteCssContent(buildAsciiLine(cardChars, state.lineWidths.card, "bottom")));
+}
+
+function resolveBorderTheme() {
+  const borders = state.modules.borders || {};
+  const presets = borders.presets || {};
+  const activeKey = borders.active || "mixed";
+  const chosen = presets[activeKey] || presets.mixed;
+
+  if (chosen) {
+    state.borderPreset = {
+      pane: chosen.pane || state.borderPreset.pane,
+      block: chosen.block || state.borderPreset.block,
+      card: chosen.card || state.borderPreset.card
+    };
+  }
+
+  const widths = borders.lineWidths || {};
+  state.lineWidths = {
+    ...state.lineWidths,
+    ...widths
+  };
+
+  applyBorderTheme();
 }
 
 function renderTopBar(siteTitle) {
@@ -144,11 +253,11 @@ function renderNavPane(navItems) {
 
   return `
     <section class="pane pane-nav">
-      <header class="pane-header">${asciiPaneHeader("Navigation", 36)}</header>
+      <header class="pane-header">${asciiPaneHeader("Navigation", state.lineWidths.paneNav)}</header>
       <div class="pane-body">
         <ul class="nav-list">${navButtons}</ul>
       </div>
-      <footer class="pane-footer">${asciiPaneFooter(36)}</footer>
+      <footer class="pane-footer">${asciiPaneFooter(state.lineWidths.paneNav)}</footer>
     </section>
   `;
 }
@@ -360,7 +469,7 @@ function renderSidePane() {
 
   return `
     <section class="pane pane-side">
-      <header class="pane-header">${asciiPaneHeader("Input: mouse / keyboard", 40)}</header>
+      <header class="pane-header">${asciiPaneHeader("Input: mouse / keyboard", state.lineWidths.paneSide)}</header>
       <div class="pane-body">
         <section class="block">
           <h2 class="section-title">Session</h2>
@@ -385,7 +494,7 @@ function renderSidePane() {
           </ul>
         </section>
       </div>
-      <footer class="pane-footer">${asciiPaneFooter(40)}</footer>
+      <footer class="pane-footer">${asciiPaneFooter(state.lineWidths.paneSide)}</footer>
     </section>
   `;
 }
@@ -401,9 +510,9 @@ function renderLayout() {
       <main class="tui-main">
         ${renderNavPane(navItems)}
         <section class="pane pane-content">
-          <header class="pane-header">${asciiPaneHeader(esc(getCurrentPageTitle()), 58)}</header>
+          <header class="pane-header">${asciiPaneHeader(esc(getCurrentPageTitle()), state.lineWidths.paneMain)}</header>
           <div class="pane-body" id="main-pane-body">${getPageContent()}</div>
-          <footer class="pane-footer">${asciiPaneFooter(58)}</footer>
+          <footer class="pane-footer">${asciiPaneFooter(state.lineWidths.paneMain)}</footer>
         </section>
         ${renderSidePane()}
       </main>
@@ -421,6 +530,7 @@ function renderLayout() {
   wireNavEvents();
   setupPanes();
   setPaneFocus(0);
+  fitPaneBordersToLayout();
   updateClock();
 }
 
@@ -550,9 +660,11 @@ function onKeyDown(event) {
 async function boot() {
   try {
     await loadData();
+    resolveBorderTheme();
     renderLayout();
     window.addEventListener("keydown", onKeyDown);
     window.addEventListener("resize", () => {
+      fitPaneBordersToLayout();
       const status = document.querySelector(".status-right");
       if (status) {
         status.textContent = `${dateString()} ${timeString()} | ${window.innerWidth}x${window.innerHeight}`;

@@ -9,6 +9,12 @@
   --accent-alt: #8fd7ff;
   --warn: #ffce7a;
   --error: #ff8484;
+  --block-v: #3a5058;
+  --card-v: #3a5058;
+  --block-top-line: "┌────────────────────────────────────────────────────────────────────────────────────────────────────────┐";
+  --block-bottom-line: "└────────────────────────────────────────────────────────────────────────────────────────────────────────┘";
+  --card-top-line: "├────────────────────────────────────────────────────────────────────────────────────────────────────────┤";
+  --card-bottom-line: "└────────────────────────────────────────────────────────────────────────────────────────────────────────┘";
 }
 
 * {
@@ -92,7 +98,7 @@ body {
   font-size: 0.95rem;
   white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis;
+  text-overflow: clip;
 }
 
 .pane-footer {
@@ -101,7 +107,7 @@ body {
   padding: 0 8px 2px;
   white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis;
+  text-overflow: clip;
 }
 
 .pane-header .muted {
@@ -167,8 +173,8 @@ body {
 .block {
   position: relative;
   border: 0;
-  border-left: 1px solid #3a5058;
-  border-right: 1px solid #3a5058;
+  border-left: 1px solid var(--block-v);
+  border-right: 1px solid var(--block-v);
   padding: 8px 10px;
   margin-bottom: 10px;
 }
@@ -176,18 +182,18 @@ body {
 .block::before,
 .block::after {
   display: block;
-  color: #3a5058;
+  color: var(--block-v);
   white-space: nowrap;
   overflow: hidden;
 }
 
 .block::before {
-  content: "┌────────────────────────────────────────────────────────────────────────────────────────────────────────┐";
+  content: var(--block-top-line);
   margin: -8px -10px 8px;
 }
 
 .block::after {
-  content: "└────────────────────────────────────────────────────────────────────────────────────────────────────────┘";
+  content: var(--block-bottom-line);
   margin: 8px -10px -8px;
 }
 
@@ -235,8 +241,8 @@ a:hover {
 .skill-group {
   position: relative;
   border: 0;
-  border-left: 1px solid #3a5058;
-  border-right: 1px solid #3a5058;
+  border-left: 1px solid var(--card-v);
+  border-right: 1px solid var(--card-v);
   padding: 8px 10px;
   margin-bottom: 10px;
 }
@@ -252,7 +258,7 @@ a:hover {
 .skill-group::before,
 .skill-group::after {
   display: block;
-  color: #3a5058;
+  color: var(--card-v);
   white-space: nowrap;
   overflow: hidden;
 }
@@ -262,7 +268,7 @@ a:hover {
 .edu-item::before,
 .cp-item::before,
 .skill-group::before {
-  content: "├────────────────────────────────────────────────────────────────────────────────────────────────────────┤";
+  content: var(--card-top-line);
   margin: -8px -10px 8px;
 }
 
@@ -271,7 +277,7 @@ a:hover {
 .edu-item::after,
 .cp-item::after,
 .skill-group::after {
-  content: "└────────────────────────────────────────────────────────────────────────────────────────────────────────┘";
+  content: var(--card-bottom-line);
   margin: 8px -10px -8px;
 }
 

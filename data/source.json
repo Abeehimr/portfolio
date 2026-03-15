@@ -6,6 +6,7 @@
     "education": "data/education.json",
     "skills": "data/skills.json",
     "projects": "data/projects.json",
-    "cpData": "data/cp.json"
+    "cpData": "data/cp.json",
+    "borders": "data/borders.json"
   }
 }
